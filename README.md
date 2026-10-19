@@ -2,8 +2,6 @@
 
 Um projeto em **Python** voltado ao monitoramento de hardware em tempo real, explorando a coleta de telemetria do sistema e sua apresentação através de uma interface moderna e responsiva inspirada no **Coresmonitor**.
 
-![Dashboard Preview](index.html)
-
 ---
 
 ## 🌟 Funcionalidades e Destaques
