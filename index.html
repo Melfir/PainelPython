@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coresmonitor - Hardware Monitor & Telemetria em Tempo Real</title>
+  <meta name="description" content="Painel moderno em Python para monitoramento completo de CPU, RAM, GPU, Discos e Rede em tempo real.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+          <rect x="9" y="9" width="6" height="6"></rect>
+          <line x1="9" y1="1" x2="9" y2="4"></line>
+          <line x1="15" y1="1" x2="15" y2="4"></line>
+          <line x1="9" y1="20" x2="9" y2="23"></line>
+          <line x1="15" y1="20" x2="15" y2="23"></line>
+          <line x1="20" y1="9" x2="23" y2="9"></line>
+          <line x1="20" y1="14" x2="23" y2="14"></line>
+          <line x1="1" y1="9" x2="4" y2="9"></line>
+          <line x1="1" y1="14" x2="4" y2="14"></line>
+        </svg>
+      </div>
+      <span class="brand-title">Cores</span>
+      <span class="brand-subtitle">Monitor v1.0</span>
+    </div>
+
+    <div class="nav-actions">
+      <div class="nav-pill" id="btn-refresh" title="Taxa de atualização: 1s">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        <span>1.0s Live</span>
+      </div>
+      <div class="nav-pill" id="btn-export" title="Exportar métricas JSON">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        <span>Exportar</span>
+      </div>
+      <div class="nav-pill" id="conn-status">
+        <span class="status-dot"></span>
+        <span>Conectado</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Dashboard Container -->
+  <main class="dashboard-container">
+
+    <!-- Host info ribbon -->
+    <section class="system-ribbon">
+      <div class="ribbon-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        <span>Computador: <strong id="sys-host">Carregando...</strong></span>
+      </div>
+      <div class="ribbon-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>Uptime: <strong id="sys-uptime">0.0h</strong></span>
+      </div>
+      <div class="ribbon-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <span>SO: <strong id="sys-os">Windows</strong></span>
+      </div>
+    </section>
+
+    <!-- Grid Cards -->
+    <div class="dashboard-grid">
+
+      <!-- Card 1: CPU -->
+      <article class="card" id="card-cpu">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
+            </div>
+            <div>
+              <h2 class="card-title">CPU</h2>
+              <div class="card-subtitle" id="cpu-name">Carregando processador...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gauge-content">
+          <div class="radial-container">
+            <svg class="radial-svg" viewBox="0 0 120 120">
+              <circle class="radial-bg" cx="60" cy="60" r="48"></circle>
+              <circle id="cpu-circle" class="radial-progress" cx="60" cy="60" r="48" stroke-dasharray="301.6" stroke-dashoffset="301.6"></circle>
+            </svg>
+            <div class="radial-center-text">
+              <span class="radial-value" id="cpu-val-center">0</span><span class="radial-unit">%</span>
+            </div>
+          </div>
+
+          <div class="metric-details" id="cpu-cores-list">
+            <!-- As barras de núcleos lógicos entram aqui via JS -->
+            <div class="core-row"><span class="core-label">Core #1</span><div class="core-bar-wrapper"><div class="core-bar-fill" style="width: 15%"></div></div><span class="core-val">15%</span></div>
+            <div class="core-row"><span class="core-label">Core #2</span><div class="core-bar-wrapper"><div class="core-bar-fill" style="width: 8%"></div></div><span class="core-val">8%</span></div>
+            <div class="core-row"><span class="core-label">Core #3</span><div class="core-bar-wrapper"><div class="core-bar-fill" style="width: 25%"></div></div><span class="core-val">25%</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 2: RAM -->
+      <article class="card" id="card-ram">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v12H4z"></path><path d="M7 6v12M11 6v12M15 6v12M19 6v12"></path></svg>
+            </div>
+            <div>
+              <h2 class="card-title">RAM</h2>
+              <div class="card-subtitle" id="ram-specs">System Memory</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gauge-content">
+          <div class="radial-container">
+            <svg class="radial-svg" viewBox="0 0 120 120">
+              <circle class="radial-bg" cx="60" cy="60" r="48"></circle>
+              <circle id="ram-circle" class="radial-progress ram-stroke" cx="60" cy="60" r="48" stroke-dasharray="301.6" stroke-dashoffset="301.6"></circle>
+            </svg>
+            <div class="radial-center-text">
+              <span class="radial-value" id="ram-val-center">0</span><span class="radial-unit">%</span>
+            </div>
+          </div>
+
+          <div class="metric-details">
+            <div class="stat-row">
+              <span>Em Uso:</span>
+              <strong id="ram-used">0.0 GB</strong>
+            </div>
+            <div class="stat-row">
+              <span>Disponível:</span>
+              <strong id="ram-free">0.0 GB</strong>
+            </div>
+            <div class="linear-meter">
+              <div class="linear-label-row">
+                <span>Memória Virtual (Swap)</span>
+                <span id="swap-val">0%</span>
+              </div>
+              <div class="linear-track">
+                <div class="linear-fill" id="swap-bar" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 3: GPU -->
+      <article class="card" id="card-gpu">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+            </div>
+            <div>
+              <h2 class="card-title">GPU</h2>
+              <div class="card-subtitle" id="gpu-name">Placa de Vídeo</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gauge-content">
+          <div class="radial-container">
+            <svg class="radial-svg" viewBox="0 0 120 120">
+              <circle class="radial-bg" cx="60" cy="60" r="48"></circle>
+              <circle id="gpu-circle" class="radial-progress gpu-stroke" cx="60" cy="60" r="48" stroke-dasharray="301.6" stroke-dashoffset="301.6"></circle>
+            </svg>
+            <div class="radial-center-text">
+              <span class="radial-value" id="gpu-val-center">0</span><span class="radial-unit">%</span>
+            </div>
+          </div>
+
+          <div class="metric-details">
+            <div class="core-row">
+              <span class="core-label">3D Engine</span>
+              <div class="core-bar-wrapper"><div class="core-bar-fill" id="gpu-3d-bar" style="width: 0%"></div></div>
+              <span class="core-val" id="gpu-3d-val">0%</span>
+            </div>
+            <div class="core-row">
+              <span class="core-label">Video Decode</span>
+              <div class="core-bar-wrapper"><div class="core-bar-fill" id="gpu-dec-bar" style="width: 0%"></div></div>
+              <span class="core-val" id="gpu-dec-val">0%</span>
+            </div>
+            <div class="core-row">
+              <span class="core-label">Memory Copy</span>
+              <div class="core-bar-wrapper"><div class="core-bar-fill" id="gpu-copy-bar" style="width: 0%"></div></div>
+              <span class="core-val" id="gpu-copy-val">0%</span>
+            </div>
+            <div class="stat-row" style="margin-top: 4px;">
+              <span>VRAM Estimada:</span>
+              <strong id="gpu-vram-text">N/A</strong>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 4: Discos / Armazenamento -->
+      <article class="card" id="card-drives">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            </div>
+            <div>
+              <h2 class="card-title">Armazenamento</h2>
+              <div class="card-subtitle">Taxas de I/O e Volume</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-details">
+          <div class="stat-row">
+            <span>Leitura (Disk Read):</span>
+            <strong id="disk-read-speed" style="color: var(--accent-cyan);">0.00 MB/s</strong>
+          </div>
+          <div class="stat-row">
+            <span>Escrita (Disk Write):</span>
+            <strong id="disk-write-speed" style="color: var(--accent-magenta);">0.00 MB/s</strong>
+          </div>
+
+          <div id="disk-partitions-list" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+            <!-- Partições do Windows geradas dinamicamente -->
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 5: CPU Temperatura & Clock -->
+      <article class="card" id="card-temp-cpu">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg>
+            </div>
+            <div>
+              <h2 class="card-title">CPU Temperatura</h2>
+              <div class="card-subtitle" id="cpu-temp-avg">Avg. Temperature: -- °C</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="temp-bar-container">
+          <div class="temp-row">
+            <span class="temp-label">Core Package</span>
+            <div class="dual-gradient-bar">
+              <div class="bar-cyan" id="cpu-temp-blue" style="width: 50%;"></div>
+              <div class="bar-pink" id="cpu-temp-pink" style="width: 20%;"></div>
+            </div>
+            <span class="temp-val" id="cpu-temp-text">38 °C</span>
+          </div>
+          <div class="temp-row">
+            <span class="temp-label">Frequência Base</span>
+            <span class="temp-val" id="cpu-freq-text" style="color: var(--accent-cyan); width: auto; font-size: 0.95rem;">3.90 GHz</span>
+          </div>
+          <div class="temp-row">
+            <span class="temp-label">Cores Físicos</span>
+            <span class="temp-val" id="cpu-phys-cores" style="color: var(--text-muted); width: auto;">6 Cores / 12 Threads</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 6: Rede & Interfaces -->
+      <article class="card" id="card-network">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </div>
+            <div>
+              <h2 class="card-title">Interfaces de Rede</h2>
+              <div class="card-subtitle">Tráfego de Dados e Largura</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-details">
+          <div class="stat-row">
+            <span>Download Speed:</span>
+            <strong id="net-down-speed" style="color: var(--accent-cyan);">0.00 MB/s</strong>
+          </div>
+          <div class="stat-row">
+            <span>Upload Speed:</span>
+            <strong id="net-up-speed" style="color: var(--accent-orange);">0.00 MB/s</strong>
+          </div>
+          <div class="stat-row" style="margin-top: 8px;">
+            <span>Total Recebido:</span>
+            <span id="net-total-recv">0.0 GB</span>
+          </div>
+          <div class="stat-row">
+            <span>Total Enviado:</span>
+            <span id="net-total-sent">0.0 GB</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 7: Top Processos em Tempo Real -->
+      <article class="card" id="card-processes" style="grid-column: span 3;">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            </div>
+            <div>
+              <h2 class="card-title">Processos Ativos em Destaque</h2>
+              <div class="card-subtitle">Processos que mais consomem tempo de CPU no momento</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="process-list" id="process-list-container">
+          <!-- Lista preenchida via Javascript -->
+        </div>
+      </article>
+
+    </div>
+  </main>
+
+  <!-- Bottom Floating Navigation Dock (estilo dock macOS/Windows dark) -->
+  <nav class="floating-dock">
+    <button class="dock-item active" title="Visão Geral (Home)" onclick="scrollToCard('card-cpu')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+    </button>
+    <button class="dock-item" title="Processador CPU" onclick="scrollToCard('card-cpu')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
+    </button>
+    <button class="dock-item" title="Memória RAM" onclick="scrollToCard('card-ram')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v12H4z"></path><path d="M7 6v12M11 6v12M15 6v12"></path></svg>
+    </button>
+    <button class="dock-item" title="Placa de Vídeo GPU" onclick="scrollToCard('card-gpu')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect></svg>
+    </button>
+    <button class="dock-item" title="Armazenamento e Discos" onclick="scrollToCard('card-drives')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+    </button>
+    <button class="dock-item" title="Rede" onclick="scrollToCard('card-network')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle></svg>
+    </button>
+    <button class="dock-item" title="Processos" onclick="scrollToCard('card-processes')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+    </button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
